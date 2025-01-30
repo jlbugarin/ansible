@@ -1,0 +1,67 @@
+---
+- name: Configurar CMDB en PostgreSQL
+  hosts: cmdb_servers
+  become: true
+  vars:
+    db_name: "cmdb"
+    db_user: "cmdb_admin"
+    db_password: "CmdbPass123"
+    db_table: "activos"
+    
+  tasks:
+    - name: Instalar PostgreSQL y sus dependencias
+      ansible.builtin.package:
+        name: "{{ item }}"
+        state: present
+      loop:
+        - postgresql
+        - postgresql-server
+        - postgresql-contrib
+        - python3-psycopg2  # Necesario para conectar desde Ansible
+
+    - name: Iniciar y habilitar el servicio PostgreSQL
+      ansible.builtin.service:
+        name: postgresql
+        state: started
+        enabled: yes
+
+    - name: Crear usuario de base de datos
+      community.postgresql.postgresql_user:
+        name: "{{ db_user }}"
+        password: "{{ db_password }}"
+        encrypted: yes
+        state: present
+
+    - name: Crear base de datos CMDB
+      community.postgresql.postgresql_db:
+        name: "{{ db_name }}"
+        owner: "{{ db_user }}"
+        state: present
+
+    - name: Crear tabla de activos en CMDB
+      community.postgresql.postgresql_query:
+        db: "{{ db_name }}"
+        login_user: "{{ db_user }}"
+        login_password: "{{ db_password }}"
+        query: >
+          CREATE TABLE IF NOT EXISTS {{ db_table }} (
+          id SERIAL PRIMARY KEY,
+          nombre VARCHAR(100),
+          tipo VARCHAR(50),
+          ip VARCHAR(15),
+          sistema_operativo VARCHAR(50),
+          fecha_registro TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+          );
+
+    - name: Insertar datos de ejemplo en CMDB
+      community.postgresql.postgresql_query:
+        db: "{{ db_name }}"
+        login_user: "{{ db_user }}"
+        login_password: "{{ db_password }}"
+        query: >
+          INSERT INTO {{ db_table }} (nombre, tipo, ip, sistema_operativo)
+          VALUES 
+          ('Servidor Web', 'VM', '192.168.1.10', 'RHEL 9'),
+          ('Router Cisco', 'Red', '192.168.1.1', 'IOS-XE'),
+          ('Servidor DB', 'Físico', '192.168.1.20', 'RHEL 8')
+          ON CONFLICT DO NOTHING;
