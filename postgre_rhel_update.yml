@@ -3,43 +3,41 @@
   hosts: tu_servidor
   become: true
   tasks:
-
     - name: Detener el servicio de PostgreSQL
-      systemd:
+      ansible.builtin.systemd:
         name: postgresql
         state: stopped
 
     - name: Realizar copia de seguridad de la base de datos
-      shell: pg_dumpall -U postgres -f /ruta/copia_seguridad.sql
       args:
         executable: /bin/bash
       register: copia_seguridad
       changed_when: copia_seguridad.stdout != ''
+      ansible.builtin.shell: pg_dumpall -U postgres -f /ruta/copia_seguridad.sql
 
     - name: Actualizar el sistema operativo
-      yum:
-        name: '*'
-        state: latest
       register: sistema_actualizado
       changed_when: sistema_actualizado.changed
+      ansible.builtin.yum:
+        name: "*"
+        state: latest
 
     - name: Actualizar el paquete de PostgreSQL
-      yum:
-        name: postgresql
-        state: latest
       register: postgres_actualizado
       changed_when: postgres_actualizado.changed
+      ansible.builtin.yum:
+        name: postgresql
+        state: latest
 
     - name: Iniciar el servicio de PostgreSQL
-      systemd:
+      ansible.builtin.systemd:
         name: postgresql
         state: started
 
     - name: Verificar el estado de la base de datos
-      command: psql -U postgres -c 'SELECT version();'
       register: estado_bd
+      ansible.builtin.command: psql -U postgres -c 'SELECT version();'
 
     - name: Mostrar estado de la base de datos
-      debug:
+      ansible.builtin.debug:
         var: estado_bd.stdout
-

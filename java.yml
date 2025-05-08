@@ -1,26 +1,27 @@
 ---
 - name: Verificar versión de Java
   hosts: localhost
-  gather_facts: yes
+  gather_facts: true
 
   tasks:
     - name: Obtener version java
-      shell: java -version
       ignore_errors: true
       register: resultado
-    
+      ansible.builtin.shell: java -version
+
     - name: Instalar Java si no está presente
-      apt:
-        name: openjdk-11-jdk   # Reemplaza con el paquete adecuado para tu sistema
-        state: present
       when: resultado.rc != 0
+      ansible.builtin.apt:
+        name: openjdk-11-jdk # Reemplaza con el paquete adecuado para tu sistema
+        state: present
 
     - name: Mostrar versión de Java instalada
-      shell: java -version
       register: resultado
       changed_when: false
       failed_when: false
 
+      ansible.builtin.shell: java -version
 
-    - name: visualizar resultado 
-      debug: var=resultado.stderr_lines[0]
+    - name: visualizar resultado
+      ansible.builtin.debug:
+        var: resultado.stderr_lines[0]
