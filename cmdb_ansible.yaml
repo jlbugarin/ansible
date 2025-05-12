@@ -3,11 +3,11 @@
   hosts: cmdb_servers
   become: true
   vars:
-    db_name: "cmdb"
-    db_user: "cmdb_admin"
-    db_password: "CmdbPass123"
-    db_table: "activos"
-    
+    db_name: cmdb
+    db_user: cmdb_admin
+    db_password: CmdbPass123
+    db_table: activos
+
   tasks:
     - name: Instalar PostgreSQL y sus dependencias
       ansible.builtin.package:
@@ -17,19 +17,19 @@
         - postgresql
         - postgresql-server
         - postgresql-contrib
-        - python3-psycopg2  # Necesario para conectar desde Ansible
+        - python3-psycopg2 # Necesario para conectar desde Ansible
 
     - name: Iniciar y habilitar el servicio PostgreSQL
       ansible.builtin.service:
         name: postgresql
         state: started
-        enabled: yes
+        enabled: true
 
     - name: Crear usuario de base de datos
       community.postgresql.postgresql_user:
         name: "{{ db_user }}"
         password: "{{ db_password }}"
-        encrypted: yes
+        encrypted: true
         state: present
 
     - name: Crear base de datos CMDB
@@ -60,8 +60,7 @@
         login_password: "{{ db_password }}"
         query: >
           INSERT INTO {{ db_table }} (nombre, tipo, ip, sistema_operativo)
-          VALUES 
-          ('Servidor Web', 'VM', '192.168.1.10', 'RHEL 9'),
+          VALUES  ('Servidor Web', 'VM', '192.168.1.10', 'RHEL 9'),
           ('Router Cisco', 'Red', '192.168.1.1', 'IOS-XE'),
           ('Servidor DB', 'Físico', '192.168.1.20', 'RHEL 8')
           ON CONFLICT DO NOTHING;
