@@ -2,15 +2,15 @@
 ---
 - name: Create a RHEL VM on AWS
   hosts: localhost
-  gather_facts: no
+  gather_facts: false
   vars:
-    instance_type: "t3.medium"
-    ami: "ami-0abcdef1234567890"  # Replace with the appropriate RHEL AMI ID
-    key_name: "my-key-pair"  # Replace with your key pair name
+    instance_type: t3.medium
+    ami: ami-0abcdef1234567890 # Replace with the appropriate RHEL AMI ID
+    key_name: my-key-pair # Replace with your key pair name
     security_group_ids:
-      - "sg-0123456789abcdef0"  # Replace with your security group ID
-    subnet_id: "subnet-0123456789abcdef0"  # Replace with your subnet ID
-    vpc_id: "vpc-0123456789abcdef0"  # Replace with your VPC ID
+      - sg-0123456789abcdef0 # Replace with your security group ID
+    subnet_id: subnet-0123456789abcdef0 # Replace with your subnet ID
+    vpc_id: vpc-0123456789abcdef0 # Replace with your VPC ID
 
   tasks:
     - name: Create an EC2 instance
@@ -21,5 +21,5 @@
         security_group_ids: "{{ security_group_ids }}"
         subnet_id: "{{ subnet_id }}"
         vpc_id: "{{ vpc_id }}"
-        wait: yes
+        wait: true
         count: 1
