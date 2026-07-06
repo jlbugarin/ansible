@@ -1,0 +1,18 @@
+---
+- name: Playbook para actualizar servidores Windows
+  hosts: windows
+  tasks:
+    - name: Instalar actualizaciones de seguridad y críticas
+      ansible.windows.win_updates:
+        category_names:
+          - SecurityUpdates
+          - CriticalUpdates
+          - UpdateRollups
+        reboot: yes
+        log_path: C:\temp\ansible_win_updates.log
+      register: update_result
+
+    - name: Mostrar los KB que requieren reinicio
+      debug:
+        msg: "El reinicio es necesario para instalar las siguientes actualizaciones: {{ update_result.reboot_required_for }}"
+      when: update_result.reboot_required
