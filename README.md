@@ -22,3 +22,6 @@ reboot: yes: ¡Importante! Esta opción reiniciará automáticamente el servidor
 log_path: C:\temp\ansible_win_updates.log: Guarda un registro detallado de la operación de actualización en el fichero especificado en el servidor Windows.
 register: update_result: Guarda la salida del módulo win_updates en una variable llamada update_result. Esto nos permite usar la información de la salida en tareas posteriores.
 name: Mostrar los KB que requieren reinicio: Esta es una tarea de depuración que se ejecuta solo si se necesita un reinicio (when: update_result.reboot_required). Imprime una lista de los números de KB de las actualizaciones que han provocado la necesidad de reiniciar.
+
+# Ejecucion del playbook en linea de comandos:
+ansible-playbook -i inventario.ini nombre-playbook.yml
