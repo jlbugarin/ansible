@@ -1,0 +1,54 @@
+---
+- hosts: all
+  become: yes
+  vars:
+    # --- INICIO DE CONFIGURACIÓN ---
+    # Defina aquí los servicios críticos que deben ser gestionados durante el parchado.
+    # El playbook los detendrá antes de actualizar y los iniciará después del reinicio.
+    # Ejemplo: services_to_manage: ['httpd', 'mariadb']
+    services_to_manage: []
+    # --- FIN DE CONFIGURACIÓN ---
+
+  tasks:
+    - name: 1. Detener servicios antes de la actualización
+      ansible.builtin.service:
+        name: "{{ item }}"
+        state: stopped
+      loop: "{{ services_to_manage }}"
+      ignore_errors: true # Continúa incluso si un servicio no existe en el servidor
+      when: services_to_manage | length > 0
+
+    - name: 2. Actualizar todos los paquetes del sistema operativo (RHEL)
+      ansible.builtin.dnf:
+        name: '*'
+        state: latest
+      register: dnf_output
+
+    - name: 3. Reiniciar el servidor si se aplicaron actualizaciones
+      ansible.builtin.reboot:
+        msg: "Reinicio iniciado por Ansible debido a actualizaciones del sistema."
+        reboot_timeout: 1800 # Tiempo de espera de 30 minutos para el reinicio
+      when: dnf_output.changed
+
+    # El siguiente bloque de tareas solo se ejecuta si el servidor fue reiniciado
+    - name: Tareas post-reinicio
+      when: dnf_output.changed and services_to_manage | length > 0
+      block:
+        - name: 4. Iniciar los servicios después del reinicio
+          ansible.builtin.service:
+            name: "{{ item }}"
+            state: started
+          loop: "{{ services_to_manage }}"
+
+        - name: 5. Esperar y verificar que los servicios responden
+          # Esta tarea intenta verificar el estado de cada servicio.
+          # Puede reemplazarla por una prueba más específica, como una llamada a una API.
+          ansible.builtin.service:
+            name: "{{ item }}"
+            state: started
+          loop: "{{ services_to_manage }}"
+          register: service_check
+          until: not service_check.failed
+          retries: 6      # Reintenta 6 veces
+          delay: 10       # Espera 10 segundos entre cada reintento
+
